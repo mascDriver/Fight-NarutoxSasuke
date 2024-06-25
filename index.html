@@ -47,6 +47,7 @@
         let narutoObjs = [];
         let mixers = [];
         let naruto_obj_clone;
+        let smoke, smokeAnimation
 
         // Initialize Scene and Camera
         container = document.createElement('div');
@@ -116,6 +117,30 @@
         }, undefined, function(error) {
             console.error(error);
         });
+        loaderGtf.load('models/fluffy_cloud/scene.gltf', function(gltf) {
+            console.log(gltf)
+
+            const scale = 10; 
+            smoke = gltf.scene;
+            smokeAnimation = gltf.animations;
+            smoke.scale.set(scale, scale, scale);
+        }, undefined, function(error) {
+            console.error(error);
+        });
+        loaderGtf.load('models/fire_animation/scene.gltf', function(gltf) {
+            gltf.scene.getObjectByName('vibrationssessel_vibrationssessel__vb_sessel_col_DONE_JP_0').position.set(-1000, 0, -7);
+            gltf.scene.getObjectByName('vibrationssessel_moto_vibrationssessel__vb_sessel_col_DONE_JP_0').position.set(-1000, 0, -7);
+            gltf.scene.getObjectByName('Plane_Material_001_0').position.set(-1000, 0, -7);
+            fire = gltf.scene;
+            fire_animation = gltf.animations;
+            fire.position.set(-9, -4, -14);
+            fire.rotation.z = 4;
+            fire.rotation.x = 2;
+            mixerFire = new THREE.AnimationMixer(fire);
+            action = mixerFire.clipAction(fire_animation[0]);
+        }, undefined, function(error) {
+            console.error(error);
+        });
 
         loaderGtf.load('models/sala_examen_chunnin/scene.gltf', function(gltf) {
             const scale = 10;
@@ -127,15 +152,6 @@
             console.error(error);
         });
 
-        loaderGtf.load('models/fire_animation/scene.gltf', function(gltf) {
-            fire = gltf.scene;
-            fire_animation = gltf.animations;
-            fire.position.set(-7, -3.5, -15);
-            fire.rotation.z = 8;
-            mixerFire = new THREE.AnimationMixer(fire);
-        }, undefined, function(error) {
-            console.error(error);
-        });
 
         // Orbit Controls
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -163,6 +179,11 @@
             if (event.code === 'ControlRight') {
                 naruto_obj_clone = clone(naruto_obj);
                 naruto_obj_clone.position.set(Math.floor(Math.random() * 10), -7, Math.floor(Math.random() * (-10 - 15)));
+
+                smoke.position.x = naruto_obj_clone.position.x -6
+                smoke.position.y = naruto_obj_clone.position.y -3
+                smoke.position.z = naruto_obj_clone.position.z -3
+                scene.add(smoke);
                 naruto_obj_clone.rotation.set(4.6, 0, 4.5);
                 narutoObjs.push(naruto_obj_clone);
 
@@ -195,10 +216,12 @@
             if (sound.isPlaying) {
                 if (naruto_obj.rotation.z > -1.78) naruto_obj.rotation.z -= 0.002;
             }
+            if (smoke)smoke.rotation.z += 0.11
 
             sound.onEnded = function() {
                 this.isPlaying = false;
                 scene.add(naruto_obj_clone);
+                scene.remove(smoke);
                 return THREE.Audio.prototype.onEnded;
             };
 
@@ -206,7 +229,6 @@
                 this.isPlaying = false;
                 scene.add(fire);
 
-                actionFire.fadeIn(3);
                 actionFire.play();
 
                 return THREE.Audio.prototype.onEnded;
